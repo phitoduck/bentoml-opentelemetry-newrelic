@@ -1,0 +1,14 @@
+version: 1
+
+tracing:
+  exporter_type: otlp
+  sample_rate: 1.0
+  otlp:
+    protocol: grpc
+    endpoint: https://otlp.nr-data.net
+    grpc:
+      insecure: false
+      headers:
+        - ["grpc-encoding", "gzip"]
+        - ["api-key", "${NEW_RELIC_LICENSE_KEY}"]
+        - ["service.name", "opentelemetry-bento-svc"]

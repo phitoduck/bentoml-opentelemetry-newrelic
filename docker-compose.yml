@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  bento-service:
+    image: dummy-service:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/home/bentoml/bento/src/
+      - ./bentoml_configuration.yaml:/home/bentoml/bentoml_configuration.yaml
+    command: serve --port 3000 --debug
+    environment:
+      BENTOML_CONFIG: /home/bentoml/bentoml_configuration.yaml
+    env_file:
+      - .env
+
+
+

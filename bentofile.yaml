@@ -1,0 +1,12 @@
+service: "service.py:svc"
+
+labels:
+  author: phitoduck
+  project: bentoml-opentelemetry-newrelic
+
+include:
+- "*.py"
+
+python:
+  packages:
+    - bentoml[io-json,tracing-otlp]
