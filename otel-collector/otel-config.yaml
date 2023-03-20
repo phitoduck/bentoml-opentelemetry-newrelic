@@ -1,0 +1,36 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "bentoml"
+          static_configs:
+            - targets: ["${SCRAPE_TARGET}"]
+          metrics_path: "/metrics"
+
+processors:
+  batch:
+
+exporters:
+  otlp:
+    endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    headers:
+      api-key: ${NEW_RELIC_LICENSE_KEY}
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch]
+      exporters: [otlp]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]

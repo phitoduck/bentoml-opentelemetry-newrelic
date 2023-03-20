@@ -14,5 +14,21 @@ services:
     env_file:
       - .env
 
-
-
+  aws-distro-otel-collector:
+    depends_on:
+      - bento-service
+    image: public.ecr.aws/aws-observability/aws-otel-collector:latest
+    ports:
+      - "55680:55680"
+      - "55681:55681"
+      - "55679:55679"
+      - "8888:8888"
+      - "4317:4317"
+    volumes:
+      - ./otel-collector/otel-config.yaml:/etc/otel-config.yaml
+    command: ["--config=/etc/otel-config.yaml", "--log-level=DEBUG"]
+    env_file:
+      - .env
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.nr-data.net:443
+      SCRAPE_TARGET: bento-service:3000
