@@ -26,9 +26,9 @@ services:
       - "4317:4317"
     volumes:
       - ./otel-collector/otel-config.yaml:/etc/otel-config.yaml
-    command: ["--config=/etc/otel-config.yaml", "--log-level=DEBUG"]
+    command: ["--config=/etc/otel-config.yaml"]
     env_file:
       - .env
     environment:
-      OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.nr-data.net:443
+      OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.nr-data.net:4317
       SCRAPE_TARGET: bento-service:3000
