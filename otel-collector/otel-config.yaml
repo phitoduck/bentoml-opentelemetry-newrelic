@@ -1,0 +1,55 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: ${NEW_RELIC_APP_NAME}-scrape-job
+          static_configs:
+            - targets: ["${SCRAPE_TARGET}"]
+          metrics_path: /metrics
+          scrape_interval: 20s
+          
+processors:
+  batch:
+  # resource:
+  #   # detectors: [system, env, ecs, ec2]
+  #   attributes:
+  #     - key: service.name
+  #       value: ${NEW_RELIC_APP_NAME}
+  #       action: upsert
+
+exporters:
+  otlp:
+    endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    headers:
+      api-key: ${NEW_RELIC_LICENSE_KEY}
+
+extensions:
+  health_check:
+    # endpoint: 0.0.0.0:${HEALTH_CHECK_PORT}
+    # path: ${HEALTH_CHECK_PATH}
+
+service:
+  extensions: [health_check]
+  telemetry:
+    logs:
+      level: "debug"
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch]
+      exporters: [otlp]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+
+
+

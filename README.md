@@ -2,7 +2,12 @@
 
 Usage:
 
-1. Create a `.env` file in the root of this repo with a single variable called `NEW_RELIC_LICENSE_KEY`
+1. Create a `.env` file in the root of this repo with these contents 
+
+```
+NEW_RELIC_LICENSE_KEY=<your ingest key here>
+```
+
 2. Build and run the bento service
 
 ```bash
