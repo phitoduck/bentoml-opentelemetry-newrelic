@@ -5,10 +5,13 @@ tracing:
   sample_rate: 1.0
   otlp:
     protocol: grpc
-    endpoint: https://otlp.nr-data.net:4317
+    # endpoint: https://otlp.nr-data.net:4317
+    endpoint: aws-distro-otel-collector:4317
     grpc:
-      insecure: false
+      insecure: true
       headers:
         - ["grpc-encoding", "gzip"]
-        - ["api-key", "${NEW_RELIC_LICENSE_KEY}"]
-        - ["service.name", "opentelemetry-bento-svc"]
+        # - ["api-key", "${NEW_RELIC_LICENSE_KEY}"]
+        - ["service.name", "${NEW_RELIC_APP_NAME}"]
+        - ["entity.name", "${NEW_RELIC_APP_NAME}"]
+        - ["app.name", "${NEW_RELIC_APP_NAME}"]
