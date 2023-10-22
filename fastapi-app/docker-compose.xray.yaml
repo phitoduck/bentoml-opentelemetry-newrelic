@@ -1,0 +1,8 @@
+# docker-compose -f docker-compose.yaml -f docker-compose.xray.yaml up
+
+services:
+
+  fastapi:
+    environment:
+      OTEL_PYTHON_ID_GENERATOR: xray
+      OTEL_PROPAGATORS: xray

@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  service-a:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DOWNSTREAM_API_TARGETS: >-
+        http://service-b:8000/echo?message=hi-service-b!,http://service-c:8000/echo?message=hi-service-c!
+      # opentelemetry
+      OTEL_PYTHON_LOG_CORRELATION: "true" # inject traces into logging library (with logging.basicConfig)
+      OTEL_SERVICE_NAME: service-a
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+
+  service-b:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DOWNSTREAM_API_TARGETS: "" # This service won't hit another one
+      # opentelemetry
+      OTEL_PYTHON_LOG_CORRELATION: "true"
+      OTEL_SERVICE_NAME: service-b
+      OTEL_PYTHON_LOG_LEVEL: info
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8000"
+
+  service-c:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DOWNSTREAM_API_TARGETS: "" # This service won't hit another one
+      # opentelemetry
+      OTEL_PYTHON_LOG_CORRELATION: "true"
+      OTEL_SERVICE_NAME: service-c
+      OTEL_PYTHON_LOG_LEVEL: info
+    volumes:
+      - .:/app
+    ports:
+      - "8002:8000"
+
+
+# # This env var can be used to set a custom logging level: info, error, debug, warning
+# export OTEL_PYTHON_LOG_LEVEL=info
+
+# OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=0.0.0.0:4317 \
+# OTEL_TRACES_EXPORTER=console,otlp \
+# OTEL_METRICS_EXPORTER=console \
+# OTEL_SERVICE_NAME=otel-playground-app \
