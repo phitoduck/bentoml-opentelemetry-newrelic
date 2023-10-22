@@ -1,0 +1,10 @@
+# docker-compose -f docker-compose.yaml -f docker-compose.newrelic.yaml up
+
+services:
+
+  fastapi:
+    env_file:
+      - .env
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.nr-data.net:4317
+      OTEL_EXPORTER_OTLP_HEADERS: "api-key=${NEW_RELIC_LICENSE_KEY}" # from .env
