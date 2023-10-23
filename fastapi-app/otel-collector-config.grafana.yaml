@@ -1,12 +1,18 @@
+# taken from the official tempo docker-compose example: 
+# https://github.com/grafana/tempo/blob/main/example/docker-compose/otel-collector/otel-collector.yaml
+
 receivers:
   otlp:
     protocols:
+      http:
       grpc:
+
 exporters:
   otlp:
     endpoint: tempo:4317
     tls:
       insecure: true
+
 service:
   pipelines:
     traces:
