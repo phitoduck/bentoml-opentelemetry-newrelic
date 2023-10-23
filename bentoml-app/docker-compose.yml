@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  bento-service:
+    image: dummy-bento-service:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/home/bentoml/bento/src/
+      - ./bentoml_configuration.yaml:/home/bentoml/bentoml_configuration.yaml
+    command: serve --port 3000 --debug
+    environment:
+      BENTOML_CONFIG: /home/bentoml/bentoml_configuration.yaml
+      NEW_RELIC_APP_NAME: dummy-bento-service
+      OTEL_SERVICE_NAME: otel-playground-app
+      OTEL_RESOURCE_ATTRIBUTES: service.name=eric-test
+      # OTLP_ENDPOINT: http://aws-distro-otel-collector:4317
+    env_file:
+      - .env
+
+# docker run --rm \
+#   -p 4317:4317 \
+#   -p 55680:55680 \
+#   -p 55681:55681 \
+#   -p 8888:8888 \
+#   -v $(pwd)/otel-collector/otel-config.yaml:/etc/otel-config.yaml \
+#   -e OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.nr-data.net:4317 \
+#   -e SCRAPE_TARGET=bento-service:3000 \
+#   -e LOG_LEVEL=debug \
+#   --env-file .env \
+#   --platform linux/amd64 \
+#   --entrypoint /bin/sh \
+#   -it \
+#   public.ecr.aws/aws-observability/aws-otel-collector:latest
+
+  aws-distro-otel-collector:
+    depends_on:
+      - bento-service
+    image: public.ecr.aws/aws-observability/aws-otel-collector:latest
+    ports:
+      - "55680:55680"
+      - "55681:55681"
+      - "55679:55679"
+      - "8888:8888"
+      - "4317:4317"
+      - "3333:3333"  # healthcheck
+    volumes:
+      - ./otel-collector/otel-config.yaml:/etc/otel-config.yaml
+    command: ["--config=/etc/otel-config.yaml"]
+    env_file:
+      - .env
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.nr-data.net:4317
+      SCRAPE_TARGET: bento-service:3000
+      LOG_LEVEL: debug
+      NEW_RELIC_APP_NAME: dummy-bento-service
+      # HEALTH_CHECK_PORT: 3333
+      # HEALTH_CHECK_PATH: /health
+    healthcheck:
+      test: ["CMD-SHELL", "/healthcheck"]
+      interval: 1s
+      timeout: 1s
+      retries: 2
+      start_period: 1s
+
