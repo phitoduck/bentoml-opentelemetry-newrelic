@@ -11,10 +11,39 @@ exporters:
   otlp:
     endpoint: tempo:4317
     tls:
-      insecure: true
+      insecure: true  # bad in prod; but for local dev we don't want the hassle of managing certs
+
+  # You can enable this exporter when you want to see what metrics or traces the
+  # collector is exporting. Can help validate that metrics are making it from
+  # your apps to the collector.
+  # 
+  # Data sources: traces, metrics, logs
+  # NOTE: Prior to v0.86.0 use `logging` instead of `debug`
+  debug:
+    verbosity: detailed
+
+
+  # prometheus exporter docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/prometheusexporter
+  # Summary: Exports data in the Prometheus format, which allows it to be scraped by a Prometheus server.
+  prometheus:
+    endpoint: otel-collector:9090
+    # tls:
+    #   insecure: "true"
+    namespace: eric-namespace
+    # const_labels:
+    #   eric-label-name: eric-label-val
+    # send_timestamps: true
+    # metric_expiration: 180m
+    # enable_open_metrics: true
+    # add_metric_suffixes: false
+    # resource_to_telemetry_conversion:
+    #   enabled: true 
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       exporters: [otlp]
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheus, debug]

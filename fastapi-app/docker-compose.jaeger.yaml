@@ -6,6 +6,7 @@ services:
       OTEL_EXPORTER_METRICS_ENDPOINT: http://otel-collector:4317
       OTEL_LOG_LEVEL: DEBUG
       OTEL_TRACES_EXPORTER: console,otlp
+      # OTEL_METRIC_EXPORT_INTERVAL: 1000 # ms
 
 
   service-b:

@@ -1,0 +1,27 @@
+# taken from the official tempo docker-compose example: 
+# https://github.com/grafana/tempo/blob/main/example/docker-compose/otel-collector/otel-collector.yaml
+
+receivers:
+  otlp:
+    protocols:
+      http:
+      grpc:
+
+exporters:
+  debug:
+    verbosity: detailed
+
+  prometheus:
+    endpoint: otel-collector:9090
+    # tls:
+    #   insecure: "true"
+    namespace: eric-namespace
+
+service:
+  pipelines:
+    # traces:
+    #   receivers: [otlp]
+    #   exporters: [otlp]
+    metrics:
+      receivers: [otlp]
+      exporters: [debug, prometheus]

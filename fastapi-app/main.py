@@ -1,6 +1,4 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
-from starlette.responses import JSONResponse
-from typing import List, Optional
 import os
 import httpx
 import logging
@@ -8,11 +6,6 @@ import asyncio
 from urllib.parse import urlparse
 
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    ConsoleSpanExporter,
-    SimpleSpanProcessor,
-)
 from opentelemetry.sdk.metrics import MeterProvider
 
 # Setting up logging
@@ -28,12 +21,7 @@ TRACER = trace.get_tracer(__name__)
 
 # Set up metrics
 METRICS = MeterProvider().get_meter(__name__)
-HISTOGRAM = METRICS.create_histogram(
-    "http_request_duration",
-    description="Time taken for each request",
-    unit="ms",
 
-)
 ERRORS_COUNTER = METRICS.create_counter(
     "errors",
     description="Number of errors occurred",
@@ -46,29 +34,28 @@ APP = FastAPI(docs_url="/")
 DOWNSTREAM_API_TARGETS = os.environ.get("DOWNSTREAM_API_TARGETS", "").split(",")
 
 
-
-
-
 @APP.get("/echo")
 async def echo(message: str, request: Request):
+    # with TRACER.start_as_current_span("echo"):
 
-    with TRACER.start_as_current_span("echo"):
+    HISTOGRAM = MeterProvider().get_meter(__name__).create_histogram(
+        "some.prefix.eric_http_request_duration_custom",
+        description="Time taken for each request",
+        unit="ms",
+    )
 
-        LOGGER.info(f"Received message: {message}")
+    LOGGER.info(f"Received message: {message}")
+    ERRORS_COUNTER.add(1)
 
-        if not DOWNSTREAM_API_TARGETS or DOWNSTREAM_API_TARGETS == [""]:
-            return {"data": {"message": message}}
+    if not DOWNSTREAM_API_TARGETS or DOWNSTREAM_API_TARGETS == [""]:
+        return {"data": {"message": message}}
 
-        responses = await asyncio.gather(
-            *[fetch(url) for url in DOWNSTREAM_API_TARGETS]
-        )
+    responses = await asyncio.gather(*[fetch(url) for url in DOWNSTREAM_API_TARGETS])
 
-        for response in responses:
-            duration = response["response"].get("duration", 0)
-            HISTOGRAM.record(duration, {"path": request.url.path})
-            LOGGER.info(
-                f"URL: {response['url']}, Response: {response['response']}"
-            )
+    for response in responses:
+        duration = response["response"].get("duration", 0)
+        HISTOGRAM.record(duration, {"path": request.url.path})
+        LOGGER.info(f"URL: {response['url']}, Response: {response['response']}")
 
     return {"data": responses}
 
@@ -85,12 +72,12 @@ async def error(message: str):
         ERRORS_COUNTER.add(1)
         LOGGER.error(f"An error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-    
 
 
 def get_request_path(url: str) -> str:
     parsed_url = urlparse(url)
     return parsed_url.path
+
 
 async def fetch(url: str) -> dict:
     async with httpx.AsyncClient() as client:

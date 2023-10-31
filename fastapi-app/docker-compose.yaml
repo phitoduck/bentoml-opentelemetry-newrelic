@@ -26,7 +26,6 @@ services:
       # opentelemetry
       OTEL_PYTHON_LOG_CORRELATION: "true"
       OTEL_SERVICE_NAME: service-b
-      OTEL_PYTHON_LOG_LEVEL: info
     volumes:
       - .:/app
     ports:
@@ -41,17 +40,12 @@ services:
       # opentelemetry
       OTEL_PYTHON_LOG_CORRELATION: "true"
       OTEL_SERVICE_NAME: service-c
-      OTEL_PYTHON_LOG_LEVEL: info
     volumes:
       - .:/app
     ports:
       - "8002:8000"
 
-
-# # This env var can be used to set a custom logging level: info, error, debug, warning
-# export OTEL_PYTHON_LOG_LEVEL=info
-
-# OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=0.0.0.0:4317 \
-# OTEL_TRACES_EXPORTER=console,otlp \
-# OTEL_METRICS_EXPORTER=console \
-# OTEL_SERVICE_NAME=otel-playground-app \
+  # hit service-a intermittently
+  curl-client:
+    image: busybox
+    command: sh -c "sleep 3; while true; do wget -qO- http://service-a:8000/echo?message=hi-service-a!; sleep 10; done"

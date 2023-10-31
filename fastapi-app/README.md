@@ -1,28 +1,4 @@
-# BentoML-OpenTelemetry-NewRelic Example
-
-Usage:
-
-1. Create a `.env` file in the root of this repo with these contents 
-
-```
-NEW_RELIC_LICENSE_KEY=<your ingest key here>
-```
-
-2. Build and run the bento service
-
-```bash
-# create and activate a Python virtual environment
-python -m venv ./venv/
-source ./venv/bin/activate
-
-# build the REST API container
-make install install-dummy-api-deps build containerize
-
-# run
-docker-compose up
-```
-
-3. Visit `http://localhost:3000` and trigger a request to the API
+# OpenTelemetry Examples
 
 ## Open-source observability stack - `docker-compose.grafana.yaml`
 
@@ -44,15 +20,15 @@ graph TD
 
   grafana(Grafana)
 
-  a -- Send traces<br/>:4317 --> otel
-  b -- Send traces<br/>:4317 --> otel
-  c -- Send traces<br/>:4317 --> otel
+  a -- Send traces/metrics<br/>:4317 --> otel
+  b -- Send traces/metrics<br/>:4317 --> otel
+  c -- Send traces/metrics<br/>:4317 --> otel
 
   a -- GET :8001/echo --> b
   a -- GET :8002/echo --> c
 
   otel -- Send traces<br/>:4317 --> tempo
-  prometheus -- Scrape metrics<br/>:9090 --> otel
+  prometheus -- Scrape metrics<br/>:9090/metrics --> otel
 
   grafana -- Query Traces<br/>:3200 --> tempo
   grafana -- :9090 --> prometheus
