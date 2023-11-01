@@ -4,6 +4,7 @@ import httpx
 import logging
 import asyncio
 from urllib.parse import urlparse
+import json
 
 from opentelemetry import trace
 from opentelemetry.sdk.metrics import MeterProvider
@@ -32,6 +33,8 @@ APP = FastAPI(docs_url="/")
 
 # Getting the DOWNSTREAM_API_TARGETS
 DOWNSTREAM_API_TARGETS = os.environ.get("DOWNSTREAM_API_TARGETS", "").split(",")
+DOWNSTREAM_HTTP_REQUEST_METHOD = os.environ.get("DOWNSTREAM_HTTP_REQUEST_METHOD", "GET")
+DOWNSTREAM_HTTP_REQUEST_BODY = json.loads(os.environ.get("DOWNSTREAM_HTTP_REQUEST_BODY", ""))
 
 
 @APP.get("/echo")
@@ -81,7 +84,13 @@ def get_request_path(url: str) -> str:
 
 async def fetch(url: str) -> dict:
     async with httpx.AsyncClient() as client:
-        resp = await client.get(url)
+        for i in range(10):
+            print("content", DOWNSTREAM_HTTP_REQUEST_BODY)
+        resp = await client.request(
+            method=DOWNSTREAM_HTTP_REQUEST_METHOD,
+            url=url,
+            json=DOWNSTREAM_HTTP_REQUEST_BODY,
+        )
         resp_data = resp.json()
         return {
             "url": url,

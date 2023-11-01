@@ -5,12 +5,14 @@ install:
 install-dummy-api-deps:
 	python3 -m pip install pydantic
 
-build:
-	NEW_RELIC_APP_NAME=dummy-bento-service \
-		python3 -m bentoml build .
+build-bento:
+	cd ./bentoml-app/ \
+	&& NEW_RELIC_APP_NAME=dummy-bento-service \
+		python3 -m bentoml build ./
 
 containerize:
-	NEW_RELIC_APP_NAME=dummy-bento-service \
+	cd ./bentoml-app/ \
+	&& NEW_RELIC_APP_NAME=dummy-bento-service \
 	python3 -m bentoml containerize dummy-bento-service:latest \
 		--docker-image-tag dummy-bento-service:latest \
 		--opt platform=linux/amd64

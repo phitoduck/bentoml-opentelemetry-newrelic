@@ -1,0 +1,47 @@
+# Use the official Python 3.9 image as a parent image
+FROM python:3.9-slim-bullseye
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Set environment variables
+ENV DOWNSTREAM_API_TARGETS=""
+ENV PYTHONUNBUFFERED=1
+
+# Copy the local requirements.txt file to the container
+COPY ./requirements.txt ./
+
+# Install any dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install newrelic
+
+# Copy the content of the local src directory to the container
+COPY ./ ./
+
+# Specify the command to run on container start
+# CMD ["opentelemetry-instrument", "--", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000", "--log-level", "info",]
+# CMD opentelemetry-instrument -- gunicorn -k uvicorn.workers.UvicornWorker main:APP --bind "0.0.0.0:8000" --log-level "info"
+# these env vars can be overriden by the "docker run" command
+ENV API_LISTENER_PORT="8080"
+ENV NUM_WORKERS=1
+
+# Run the server in our pyenv environment; the first several lines of this command "auto-instrument"
+# your python code with for logging/alerting/monitoring in NewRelic. Rather than launch your program
+# directly, you use `newrelic-admin run-program <your CLI command>` which does all the monitoring magic.
+#
+# Feel free to anything after the `newrelic-admin run-program` statement to better reflect the needs of your app.
+CMD NEW_RELIC_LICENSE_KEY="${NEW_RELIC_LICENSE_KEY}" \
+    NEW_RELIC_APP_NAME="${NEW_RELIC_APP_NAME}" \
+    NEW_RELIC_APPLICATION_LOGGING_ENABLED=true \
+    NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED=true \
+    NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=false \
+    \
+    newrelic-admin run-program \
+    \
+    gunicorn "main:APP" \
+        --worker-class uvicorn.workers.UvicornWorker \
+        --workers ${NUM_WORKERS} \
+        --bind 0.0.0.0:${API_LISTENER_PORT} \
+        --reload
+
+

@@ -9,7 +9,6 @@ import os
 import functools
 import traceback
 
-
 from logging import getLogger
 
 LOGGER = getLogger(__name__)
@@ -78,14 +77,15 @@ def log_traceback_asgi_route(func: Callable) -> Callable:
     input=JSON(pydantic_model=PredictRequest),
     output=JSON(pydantic_model=PredictResponse),
 )
-@log_traceback_asgi_route
-def predict(input: PredictRequest) -> np.ndarray:
+async def predict(input: PredictRequest) -> np.ndarray:
     """Simulate running a prediction."""
-    time.sleep(1)
-    result: int = example_runner.run(
+    result: int = await example_runner.async_run(
         [input.input],
     )
     LOGGER.info("RESULT %s", result)
+
+    for _ in range(10):
+        print("in the /predict endpoint")
 
     return PredictResponse(
         output=result[0],
@@ -98,7 +98,7 @@ def predict(input: PredictRequest) -> np.ndarray:
     output=JSON(pydantic_model=PredictResponse),
 )
 @log_traceback_asgi_route
-def error(input: PredictRequest) -> PredictResponse:
+async def error(input: PredictRequest) -> PredictResponse:
     """Raise an exception.
 
     The traceback should be logged and appropriated decorated with trace and span IDs.
@@ -109,6 +109,7 @@ def error(input: PredictRequest) -> PredictResponse:
     - list item 2
         - nested list item 1
     """
+    
     result: int = example_runner.run([input.input])
     LOGGER.info("RESULT %s", result)
 

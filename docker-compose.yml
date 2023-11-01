@@ -6,9 +6,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - .:/home/bentoml/bento/src/
-      - ./bentoml_configuration.yaml:/home/bentoml/bentoml_configuration.yaml
-    command: serve --port 3000 --debug
+      - ./bentoml-app/:/home/bentoml/bento/src/
+      - ./bentoml-app/bentoml_configuration.yaml:/home/bentoml/bentoml_configuration.yaml
+    command: serve --port 3000 # --debug
     environment:
       BENTOML_CONFIG: /home/bentoml/bentoml_configuration.yaml
       NEW_RELIC_APP_NAME: dummy-bento-service
@@ -17,6 +17,28 @@ services:
       # OTLP_ENDPOINT: http://aws-distro-otel-collector:4317
     env_file:
       - .env
+
+  fastapi-service:
+    build:
+      context: ./fastapi-app
+      dockerfile: Dockerfile.newrelic
+    environment:
+      DOWNSTREAM_API_TARGETS: >-
+        http://bento-service:3000/predict
+      DOWNSTREAM_HTTP_REQUEST_METHOD: POST
+      DOWNSTREAM_HTTP_REQUEST_BODY: '{"input": 0}'
+      NEW_RELIC_APP_NAME: fastapi-mixed-instrumentation
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      API_LISTENER_PORT: "8000"
+      # opentelemetry
+      # OTEL_PYTHON_LOG_CORRELATION: "true" # inject traces into logging library (with logging.basicConfig)
+      # OTEL_SERVICE_NAME: aws-distro-otel-collector
+    volumes:
+      - ./fastapi-app:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - bento-service
 
 # docker run --rm \
 #   -p 4317:4317 \
